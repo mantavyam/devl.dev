@@ -106,21 +106,21 @@ export function DashboardsSupportShowcasePage() {
   const totalResolved = STATES.find((s) => s.label === "resolved")!.count;
 
   return (
-    <div className="min-h-svh bg-background px-10 py-10">
+    <div className="min-h-svh bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
       <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex items-end justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
               Support · acme/help
             </div>
             <h1 className="mt-1 font-heading text-2xl">Queue overview</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5 pointer-coarse:h-10">
               All teams
               <ChevronDownIcon className="size-3" />
             </Button>
-            <Button variant="outline" size="sm" className="gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1.5 pointer-coarse:h-10">
               Today
               <ChevronDownIcon className="size-3" />
             </Button>
@@ -128,7 +128,7 @@ export function DashboardsSupportShowcasePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/60 lg:grid-cols-[320px_1fr]">
-          <div className="bg-background p-6">
+          <div className="bg-background p-4 sm:p-6">
             <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
               Active tickets
             </div>
@@ -161,8 +161,8 @@ export function DashboardsSupportShowcasePage() {
             </ul>
           </div>
 
-          <div className="bg-background p-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-background p-4 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <AlertTriangleIcon className="size-4 text-rose-500" />
                 <span className="font-mono text-[10px] text-rose-600 uppercase tracking-[0.3em] dark:text-rose-400">
@@ -174,16 +174,12 @@ export function DashboardsSupportShowcasePage() {
               </div>
               <a
                 href="#"
-                className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.25em] hover:text-foreground"
+                className="min-h-8 font-mono text-[10px] text-muted-foreground uppercase tracking-[0.25em] hover:text-foreground pointer-coarse:min-h-10"
               >
                 view all →
               </a>
             </div>
-            <ul className="mt-3 divide-y divide-border/40">
-              {BREACHES.map((b) => (
-                <BreachRow key={b.id} breach={b} />
-              ))}
-            </ul>
+            <BreachTable breaches={BREACHES} />
 
             <div className="mt-5">
               <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
@@ -203,7 +199,7 @@ export function DashboardsSupportShowcasePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/60 lg:grid-cols-[1fr_280px]">
-          <div className="bg-background p-6">
+          <div className="bg-background p-4 sm:p-6">
             <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
               Agent leaderboard · today
             </div>
@@ -211,7 +207,8 @@ export function DashboardsSupportShowcasePage() {
               {AGENTS.map((a, i) => (
                 <li
                   key={a.name}
-                  className="grid grid-cols-[2rem_auto_1fr_auto_auto_auto] items-center gap-4 py-2.5"
+                  // Below sm: rank, avatar, name + load bar (+ resolved), CSAT.
+                  className="grid grid-cols-[1.5rem_auto_minmax(0,1fr)_auto] items-center gap-3 py-2.5 sm:grid-cols-[2rem_auto_minmax(0,1fr)_auto_auto_auto] sm:gap-4"
                 >
                   <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
                     #{i + 1}
@@ -221,8 +218,8 @@ export function DashboardsSupportShowcasePage() {
                       {a.initials}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <div className="text-sm">{a.name}</div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm">{a.name}</div>
                     <div className="mt-1 h-1 overflow-hidden rounded-full bg-foreground/[0.04]">
                       <div
                         className={`h-full ${
@@ -233,8 +230,11 @@ export function DashboardsSupportShowcasePage() {
                         style={{ width: `${a.load * 100}%` }}
                       />
                     </div>
+                    <div className="mt-1 font-mono text-[10px] text-muted-foreground sm:hidden">
+                      {a.resolved} resolved · {Math.round(a.load * 100)}% load
+                    </div>
                   </div>
-                  <div className="text-right font-mono text-[11px] tabular-nums">
+                  <div className="text-right font-mono text-[11px] tabular-nums max-sm:hidden">
                     <div>
                       <span className="text-foreground">{a.resolved}</span>{" "}
                       <span className="text-muted-foreground">resolved</span>
@@ -251,7 +251,7 @@ export function DashboardsSupportShowcasePage() {
                       csat
                     </div>
                   </div>
-                  <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em] tabular-nums">
+                  <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em] tabular-nums max-sm:hidden">
                     {Math.round(a.load * 100)}%
                   </div>
                 </li>
@@ -259,7 +259,7 @@ export function DashboardsSupportShowcasePage() {
             </ul>
           </div>
 
-          <div className="bg-background p-6">
+          <div className="bg-background p-4 sm:p-6">
             <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
               Tag mix
             </div>
@@ -321,29 +321,64 @@ function Donut({ buckets }: { buckets: Bucket[] }) {
   );
 }
 
-function BreachRow({ breach: b }: { breach: Breach }) {
+// A real table: fixed columns and uniform two-line rows at every width.
+// Phones: priority · ticket (subject + id/customer) · overdue. sm adds the SLA
+// target column, md moves the customer into its own column.
+function BreachTable({ breaches }: { breaches: Breach[] }) {
   return (
-    <li className="flex items-center gap-3 py-2.5">
-      <PriorityChip p={b.priority} />
-      <Avatar className="size-6">
-        <AvatarFallback className="text-[10px]">{b.initials}</AvatarFallback>
-      </Avatar>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
-          <span className="font-mono text-[11px] text-muted-foreground">
-            {b.id}
-          </span>
-          <span className="truncate text-sm">{b.subject}</span>
-        </div>
-        <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
-          {b.customer} · {b.due}
-        </div>
-      </div>
-      <div className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-2 py-1 font-mono text-[11px] text-rose-700 tabular-nums dark:text-rose-400">
-        <ClockIcon className="size-3" />
-        {b.overdueMin}m over
-      </div>
-    </li>
+    <table className="mt-3 w-full table-fixed border-collapse text-left">
+      <caption className="sr-only">Tickets breaching SLA</caption>
+      <thead>
+        <tr className="border-border/60 border-b font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
+          <th scope="col" className="w-14 py-2 pr-2 font-normal">Pri</th>
+          <th scope="col" className="py-2 pr-3 font-normal">Ticket</th>
+          <th scope="col" className="w-32 py-2 pr-3 font-normal max-md:hidden">Customer</th>
+          <th scope="col" className="w-32 py-2 pr-3 font-normal max-sm:hidden">SLA</th>
+          <th scope="col" className="w-24 py-2 text-right font-normal">Overdue</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-border/40">
+        {breaches.map((b) => (
+          <tr key={b.id} className="h-14 align-middle">
+            <td className="pr-2">
+              <PriorityChip p={b.priority} />
+            </td>
+            <td className="min-w-0 pr-3">
+              <div className="truncate text-sm">{b.subject}</div>
+              <div className="truncate font-mono text-[11px] text-muted-foreground">
+                {b.id}
+                <span className="md:hidden"> · {b.customer}</span>
+              </div>
+            </td>
+            <td className="pr-3 max-md:hidden">
+              <div className="flex min-w-0 items-center gap-2">
+                <Avatar className="size-6 shrink-0">
+                  <AvatarFallback className="text-[10px]">{b.initials}</AvatarFallback>
+                </Avatar>
+                <span className="truncate text-sm">{b.customer}</span>
+              </div>
+            </td>
+            <td className="truncate pr-3 font-mono text-[11px] text-muted-foreground uppercase tracking-[0.1em] max-sm:hidden">
+              {b.due}
+            </td>
+            <td className="text-right">
+              <OverdueBadge minutes={b.overdueMin} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function OverdueBadge({ minutes, className }: { minutes: number; className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-2 py-1 font-mono text-[11px] text-rose-700 normal-case tracking-normal tabular-nums dark:text-rose-400 ${className ?? ""}`}
+    >
+      <ClockIcon className="size-3" />
+      {minutes}m over
+    </span>
   );
 }
 
