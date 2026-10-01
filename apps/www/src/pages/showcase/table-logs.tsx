@@ -12,6 +12,7 @@ import {
   TerminalIcon,
 } from "lucide-react";
 import { Badge } from "@orbit/ui/badge";
+import { useMediaQuery } from "@orbit/ui/hooks/use-media-query";
 import { Button } from "@orbit/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@orbit/ui/input-group";
 import { Kbd } from "@orbit/ui/kbd";
@@ -308,9 +309,9 @@ export function TableLogsShowcasePage() {
   const selected = ENTRIES.find((e) => e.id === selectedId) ?? null;
 
   return (
-    <div className="min-h-svh bg-background px-6 py-12">
+    <div className="min-h-svh bg-background px-4 py-6 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-4 flex items-center justify-between gap-4">
+        <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div className="flex items-center gap-2">
             <TerminalIcon className="size-4 text-muted-foreground" />
             <h1 className="font-heading text-xl">Logs</h1>
@@ -325,15 +326,16 @@ export function TableLogsShowcasePage() {
             </Badge>
           </div>
           <div className="flex items-center gap-2">
-            <InputGroup className="w-72">
+            <InputGroup className="min-w-0 flex-1 sm:w-72 sm:flex-none">
               <InputGroupAddon>
                 <span className="font-mono text-muted-foreground text-xs">$</span>
               </InputGroupAddon>
               <InputGroupInput
+                aria-label="Filter logs"
                 placeholder="severity:error service:billing"
                 className="font-mono text-xs"
               />
-              <InputGroupAddon align="inline-end">
+              <InputGroupAddon align="inline-end" className="pointer-coarse:hidden">
                 <Kbd>⌘K</Kbd>
               </InputGroupAddon>
             </InputGroup>
@@ -341,18 +343,25 @@ export function TableLogsShowcasePage() {
               size="sm"
               variant="outline"
               onClick={() => setPaused((p) => !p)}
+              aria-label={paused ? "Resume" : "Pause"}
+              className="shrink-0 pointer-coarse:h-10"
             >
               {paused ? <PlayIcon /> : <PauseIcon />}
-              {paused ? "Resume" : "Pause"}
+              <span className="max-sm:sr-only">{paused ? "Resume" : "Pause"}</span>
             </Button>
           </div>
         </header>
 
+        {/*
+          A real table at every width: same columns, uniform single-line rows.
+          Below lg it scrolls sideways inside its card (the page itself never
+          does); Time stays pinned so each row keeps its timestamp.
+        */}
         <div className="overflow-hidden rounded-xl border bg-card font-mono shadow-xs/5">
-          <Table className="text-xs">
+          <Table className="min-w-[860px] text-xs">
             <TableHeader>
               <TableRow className="border-b bg-background">
-                <TableHead className="ps-4 text-[10px] uppercase tracking-wider">Time</TableHead>
+                <TableHead className="sticky left-0 z-10 bg-background ps-4 text-[10px] uppercase tracking-wider">Time</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-wider">Lvl</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-wider">Service</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-wider">Request</TableHead>
@@ -368,9 +377,17 @@ export function TableLogsShowcasePage() {
                   <TableRow
                     key={e.id}
                     onClick={() => setSelectedId(e.id)}
+                    onKeyDown={(ev) => {
+                      if (ev.key === "Enter" || ev.key === " ") {
+                        ev.preventDefault();
+                        setSelectedId(e.id);
+                      }
+                    }}
+                    tabIndex={0}
+                    aria-label={`${e.severity} ${e.ts} ${e.message} — open details`}
                     data-active={active}
                     className={
-                      "cursor-pointer transition-colors " +
+                      "group cursor-pointer transition-colors " +
                       (active
                         ? "bg-foreground/[0.06]"
                         : e.severity === "error"
@@ -378,7 +395,19 @@ export function TableLogsShowcasePage() {
                           : "hover:bg-foreground/[0.03]")
                     }
                   >
-                    <TableCell className="ps-4 text-muted-foreground tabular-nums">{e.ts}</TableCell>
+                    {/* Pinned cell is opaque, so it mixes the row tint into the card colour. */}
+                    <TableCell
+                      className={
+                        "sticky left-0 z-10 ps-4 text-muted-foreground tabular-nums transition-colors " +
+                        (active
+                          ? "bg-[color-mix(in_srgb,var(--card),var(--foreground)_6%)]"
+                          : e.severity === "error"
+                            ? "bg-[color-mix(in_srgb,var(--card),var(--destructive)_4%)] group-hover:bg-[color-mix(in_srgb,var(--card),var(--destructive)_8%)]"
+                            : "bg-card group-hover:bg-[color-mix(in_srgb,var(--card),var(--foreground)_3%)]")
+                      }
+                    >
+                      {e.ts}
+                    </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center gap-1.5">
                         <span className={"size-1.5 rounded-full " + s.dot} />
@@ -389,7 +418,7 @@ export function TableLogsShowcasePage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">{e.service}</TableCell>
                     <TableCell className="text-muted-foreground">{e.request}</TableCell>
-                    <TableCell className="max-w-md">
+                    <TableCell className="w-full max-w-0">
                       <span className="flex items-center gap-2">
                         {e.severity === "error" ? (
                           <CircleAlertIcon className="size-3.5 shrink-0 text-destructive" />
@@ -398,13 +427,13 @@ export function TableLogsShowcasePage() {
                         ) : e.severity === "info" ? (
                           <InfoIcon className="size-3.5 shrink-0 text-sky-500/70" />
                         ) : null}
-                        <span className="truncate">{e.message}</span>
+                        <span className="min-w-0 truncate">{e.message}</span>
                         {e.status ? (
                           <Badge
                             variant="outline"
                             size="sm"
                             className={
-                              "ml-auto shrink-0 font-mono text-[9px] " +
+                              "ml-auto shrink-0 font-mono text-[10px] " +
                               (e.status >= 400
                                 ? "border-destructive/30 text-destructive"
                                 : "")
@@ -426,7 +455,7 @@ export function TableLogsShowcasePage() {
         </div>
         <p className="mt-3 font-mono text-[11px] text-muted-foreground">
           Showing last 10 entries · streaming from prod-eu-west-1 ·{" "}
-          <span className="text-foreground/80">click a row for details</span>
+          <span className="text-foreground/80">select a row for details</span>
         </p>
       </div>
 
@@ -445,9 +474,11 @@ function LogDetailSheet({
   entry: Entry | null;
   onClose: () => void;
 }) {
+  // Bottom sheet on phones (thumb reach, full width), side panel from sm up.
+  const isPhone = useMediaQuery("max-sm");
   return (
     <Sheet open={!!entry} onOpenChange={(o) => !o && onClose()}>
-      <SheetPopup side="right" className="!max-w-xl">
+      <SheetPopup side={isPhone ? "bottom" : "right"} className={isPhone ? "max-h-[85svh]" : "!max-w-xl"}>
         {entry ? (
           <>
             <SheetHeader>
@@ -639,14 +670,14 @@ function KeyVal({
 }) {
   const [copied, setCopied] = useState(false);
   return (
-    <div className="group flex items-baseline justify-between gap-3 rounded-md px-2 py-1 transition-colors hover:bg-foreground/[0.03]">
+    <div className="group flex items-baseline justify-between gap-3 rounded-md px-2 py-1 transition-colors focus-within:bg-foreground/[0.03] hover:bg-foreground/[0.03]">
       <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
         {label}
       </span>
       <span className="flex items-center gap-1.5">
         <span
           className={
-            "max-w-[260px] truncate text-foreground/90 " +
+            "min-w-0 max-w-[55vw] truncate text-foreground/90 sm:max-w-[260px] " +
             (mono ? "font-mono text-[12px]" : "text-sm")
           }
         >
@@ -664,8 +695,9 @@ function KeyVal({
               setCopied(true);
               window.setTimeout(() => setCopied(false), 1200);
             }}
-            aria-label="Copy"
-            className="inline-flex size-5 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-foreground/[0.05] hover:text-foreground group-hover:opacity-100"
+            aria-label={`Copy ${label}`}
+            // Hover reveal on desktop; always visible on touch and when focused.
+            className="inline-flex size-6 items-center justify-center rounded text-muted-foreground/40 opacity-0 transition-opacity hover:bg-foreground/[0.05] hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 pointer-coarse:size-9 pointer-coarse:opacity-100"
           >
             <CopyIcon className="size-3" />
           </button>
